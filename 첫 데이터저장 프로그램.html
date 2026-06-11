@@ -1,0 +1,661 @@
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logos Nexus — 새로운 질서의 확립</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #f4fbf4;
+            --card-bg: #ffffff;
+            --text-color: #2d4a36;
+            --accent-color: #55c875;
+            --accent-hover: #45a860; 
+            --border-color: #d1ebd8;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0; padding: 20px; display: flex; justify-content: center;
+            align-items: center; min-height: 95vh;
+        }
+
+        .container {
+            width: 100%; max-width: 700px; background-color: var(--card-bg);
+            border: 2px solid var(--border-color); 
+            border-radius: 30px;
+            padding: 40px 30px; 
+            box-shadow: 0 15px 35px rgba(85, 200, 117, 0.15);
+            box-sizing: border-box; position: relative;
+        }
+
+        .hidden { display: none !important; }
+        h1, h2, h3 { color: #1e3a26; text-align: center; font-weight: 800; }
+        p { line-height: 1.6; }
+
+        .btn {
+            background-color: var(--accent-color); color: #ffffff; border: none;
+            padding: 14px 24px; font-size: 16px; border-radius: 50px; 
+            cursor: pointer; display: block; margin: 20px auto 0; 
+            transition: all 0.2s; font-weight: bold; width: 100%; max-width: 350px;
+            box-shadow: 0 4px 10px rgba(85, 200, 117, 0.3);
+        }
+        .btn:hover { background-color: var(--accent-hover); transform: translateY(-2px); }
+
+        .input-group { margin-bottom: 15px; }
+        .input-group label { display: block; margin-bottom: 8px; font-size: 14px; color: #4b7a59; font-weight: bold; }
+        .text-input { 
+            width: 100%; padding: 15px; background-color: #f9fdfa; 
+            border: 2px solid var(--border-color); border-radius: 16px; 
+            color: #2d4a36; box-sizing: border-box; font-size: 15px; transition: border 0.3s;
+        }
+        .text-input:focus { border-color: var(--accent-color); outline: none; }
+
+        .progress-bar { text-align: right; font-size: 14px; color: #6b9e7d; margin-bottom: 15px; font-weight: bold; }
+        .question-text { font-size: 20px; font-weight: 700; margin-bottom: 30px; min-height: 60px; text-align: center; word-break: keep-all; color: #1e3a26; }
+        .score-buttons { display: flex; justify-content: space-between; gap: 10px; }
+        .score-btn {
+            flex: 1; background-color: #ffffff; border: 2px solid var(--border-color);
+            color: var(--text-color); padding: 18px 5px; border-radius: 20px; 
+            cursor: pointer; font-size: 15px; font-weight: bold; word-break: keep-all; transition: all 0.2s;
+        }
+        .score-btn:hover { background-color: var(--accent-color); color: white; border-color: var(--accent-color); transform: scale(1.05); }
+
+        .philosopher-title { font-size: 30px; color: #ff8c42; margin-top: 10px; text-align: center; font-weight: 900; text-shadow: 1px 1px 0px rgba(0,0,0,0.05); }
+        .quote-box { background-color: #f4fbf4; border-radius: 16px; border-left: 6px solid var(--accent-color); padding: 20px; font-style: italic; margin: 25px 0; color: #2d4a36; font-weight: bold; }
+
+        .forest-split-grid {
+            display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr;
+            gap: 15px; margin-bottom: 25px;
+        }
+        .forest-card {
+            background-color: #ffffff; border: 2px solid var(--border-color); border-radius: 24px;
+            padding: 25px 10px; text-align: center; cursor: pointer; transition: transform 0.2s, background 0.2s, border-color 0.2s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        }
+        .forest-card:hover { transform: translateY(-5px); background-color: #f4fbf4; border-color: var(--accent-color); }
+        .forest-card-icon { font-size: 50px; margin-bottom: 10px; }
+        .forest-card-title { font-size: 17px; font-weight: 900; color: #3ea35b; margin-bottom: 5px; }
+        .forest-card-count { font-size: 14px; color: #6b9e7d; font-weight: bold; }
+
+        .specific-forest-area {
+            position: relative; width: 100%; height: 450px; 
+            border: 4px solid var(--border-color); border-radius: 24px;
+            overflow: hidden; margin-top: 15px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.1);
+            background-size: cover;
+            background-position: center;
+        }
+        .tree-node-absolute {
+            position: absolute; transform: translate(-50%, -100%); 
+            text-align: center; cursor: pointer; transition: transform 0.2s;
+        }
+        .tree-node-absolute:hover { transform: translate(-50%, -100%) scale(1.15); z-index: 10; }
+        .tree-icon { font-size: 42px; display: block; filter: drop-shadow(0px 4px 4px rgba(0,0,0,0.3)); }
+        
+        .tree-name { 
+            font-size: 12px; font-weight: 800; color: #ffffff; 
+            background: #4b7a59; padding: 4px 10px; border-radius: 12px;
+            white-space: nowrap; margin-top: -2px; border: 2px solid #ffffff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .planting-mode { border: 4px dashed #ff8c42 !important; cursor: crosshair !important; opacity: 0.9; }
+        .instruction-box { background-color: #ff8c42; color: white; padding: 12px; text-align: center; border-radius: 16px; font-weight: bold; font-size: 15px; margin-bottom: 15px; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { transform: scale(0.98); } 50% { transform: scale(1.02); } 100% { transform: scale(0.98); } }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(20, 40, 25, 0.6); display: flex; justify-content: center; align-items: center; z-index: 999; backdrop-filter: blur(4px); }
+        .sticky-note { position: relative; background-color: #fffcd6; color: #4a3e20; padding: 30px; border-radius: 20px; width: 90%; max-width: 420px; font-size: 15px; border: 2px solid #e2d798; box-shadow: 0 15px 30px rgba(0,0,0,0.2); line-height: 1.6; animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.9) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        .note-header { font-weight: 900; margin-bottom: 15px; font-size: 18px; color: #a18012; border-bottom: 2px dashed #e2d798; padding-bottom: 10px; }
+        .modal-close-btn { background: #e2d798; color: #4a3e20; border: none; padding: 10px 20px; border-radius: 50px; cursor: pointer; font-size: 14px; font-weight: bold; display: block; margin: 25px auto 0; transition: background 0.2s; }
+        .modal-close-btn:hover { background: #d1c583; }
+        .delete-btn { position: absolute; top: 15px; right: 15px; background: #ff6b6b; color: white; border: none; padding: 6px 12px; border-radius: 10px; cursor: pointer; font-size: 12px; font-weight: bold; }
+        
+        .admin-trigger { background: none; border: none; color: #a1c7a8; font-size: 12px; cursor: pointer; margin-top: 20px; text-decoration: underline; float: right; }
+        .admin-dashboard { background-color: #f4fbf4; border: 2px solid var(--border-color); border-radius: 20px; padding: 25px; margin-top: 30px; display: none; }
+        .admin-dashboard h3 { color: #3ea35b; margin-top: 0; border-bottom: 2px solid var(--border-color); padding-bottom: 10px; }
+        .stat-section h4 { color: #2d4a36; margin: 10px 0 10px 0; font-size: 16px; font-weight: bold; }
+        .bar-wrap { display: flex; align-items: center; margin-bottom: 10px; font-size: 14px; font-weight: bold;}
+        .bar-label { width: 120px; color: #4b7a59; text-overflow: ellipsis; white-space: nowrap; overflow: hidden; }
+        .bar-bg { flex: 1; background-color: #ffffff; height: 16px; border-radius: 10px; margin: 0 10px; overflow: hidden; position: relative; border: 1px solid var(--border-color); }
+        .bar-fill { height: 100%; background-color: #ff8c42; border-radius: 10px; transition: width 0.5s ease-in-out; }
+        .bar-fill.philo { background-color: var(--accent-color); }
+        .bar-pct { width: 45px; text-align: right; color: #2d4a36; }
+    </style>
+    <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js" integrity="sha384-TiCUE00h649CAMonG018J2uzOQ00V7c03o0dBBOxO5S/E07Zof0A/S/Ff35Q7r0m" crossorigin="anonymous"></script>
+</head>
+<body>
+
+<div class="container">
+    <div id="screen-start">
+        <h1>Logos Nexus</h1>
+        <p style="text-align: center; color: #6b9e7d; font-weight: bold;">초A.I. 시대, 나의 철학적 성향과 새로운 질서 확립 프로젝트</p>
+        <p style="margin-top: 30px; font-size: 15px; color: #4b7a59;">240개의 질문 중 랜덤으로 결정된 24개의 질문을 통해 일상적 태도를 분석하여, 24명의 사상가 중 누구와 가장 닮아있는지 매칭합니다. 초 A.I. 시대 속 인간성을 지켜줄 나만의 '새로운 질서'를 세워 숲을 꾸미고 공유해보세요!</p>
+        
+        <div class="input-group" style="margin-top: 25px; padding: 20px; background: #f4fbf4; border-radius: 20px; border: 2px solid var(--border-color);">
+            <label for="user-nickname">📝 쪽지에 남길 귀여운 별명을 적어주세요</label>
+            <input type="text" id="user-nickname" class="text-input" placeholder="예: DGHS 오주와, 초록빛 칸트!">
+        </div>
+
+        <button class="btn" onclick="startQuiz()">🌱 철학적 성향 검사 시작하기</button>
+        <button class="btn" style="background-color: #ffffff; border: 2px solid var(--border-color); color: #6b9e7d; margin-top: 15px;" onclick="showForestOnly()">바로 로고스의 숲 구경하기</button>
+    </div>
+
+    <div id="screen-quiz" class="hidden">
+        <div class="progress-bar" id="quiz-progress">1 / 24</div>
+        <div class="question-text" id="quiz-question">질문 로딩 중...</div>
+        <div class="score-buttons">
+            <button class="score-btn" onclick="submitAnswer(1)">전혀<br>아니다</button>
+            <button class="score-btn" onclick="submitAnswer(2)">아니다</button>
+            <button class="score-btn" onclick="submitAnswer(3)">보통</button>
+            <button class="score-btn" onclick="submitAnswer(4)">그렇다</button>
+            <button class="score-btn" onclick="submitAnswer(5)">매우<br>그렇다</button>
+        </div>
+    </div>
+
+    <div id="screen-result-1" class="hidden">
+        <h3 style="color: #6b9e7d;">당신의 성향과 가장 가까운 사상가는?</h3>
+        <div class="philosopher-title" id="res-philosopher-name">철학자(사상가) 이름</div>
+        <p style="font-weight: 900; text-align: center; color: var(--accent-color); font-size: 18px;" id="res-tree-group">소속 나무</p>
+        <div style="margin-top: 30px; background: #f9fdfa; padding: 20px; border-radius: 20px; border: 2px solid var(--border-color);">
+            <h4 style="color: #ff8c42; margin-top: 0;">💡 그가 바라본 AI 시대:</h4>
+            <p id="res-ai-view" style="margin-bottom: 0;">AI 시대 분석 내용</p>
+        </div>
+        <button class="btn" onclick="goToScreen2()">나만의 새로운 질서 작성하기</button>
+    </div>
+
+    <div id="screen-result-2" class="hidden">
+        <h3 id="res-quote-title">사상가의 한마디</h3>
+        <div class="quote-box" id="res-quote-text">"명언 내용"</div>
+        <h3 style="margin-top: 40px; color: #1e3a26;">나만의 새로운 질서 수립 ✍️</h3>
+        <p style="font-size: 14px; color: #6b9e7d; text-align: center; font-weight: bold;">일상에서 실천할 1~3가지 규칙을 써주세요.</p>
+        
+        <div class="input-group">
+            <input type="text" id="pledge-1" class="text-input" placeholder="01. 비판 없이 AI 답변을 복사하지 않겠다. (필수)">
+        </div>
+        <div class="input-group">
+            <input type="text" id="pledge-2" class="text-input" placeholder="02. 하루 30분 스마트폰을 끄고 사유하겠다. (선택)">
+        </div>
+        <div class="input-group">
+            <input type="text" id="pledge-3" class="text-input" placeholder="03. (선택)">
+        </div>
+        <button class="btn" style="background-color: #ff8c42;" onclick="submitToTree()">숲에 내 나무 심으러 가기 🌳</button>
+    </div>
+
+    <div id="screen-forest" class="hidden">
+        <h2>로고스의 숲 🌿</h2>
+        <p style="text-align: center; color: #6b9e7d; font-size: 15px; margin-bottom: 30px; font-weight: bold;">공동체의 사유가 거대한 인류의 숲을 이룹니다. 입장할 숲을 선택하세요.</p>
+        
+        <div class="forest-split-grid">
+            <div class="forest-card" onclick="openSpecificForest('실존과 인식의 나무')">
+                <div class="forest-card-icon">🌲</div>
+                <div class="forest-card-title">실존과 인식의 숲</div>
+                <div class="forest-card-count" id="summary-count-1">0 그루</div>
+            </div>
+            <div class="forest-card" onclick="openSpecificForest('기술 사회 비판의 나무')">
+                <div class="forest-card-icon">🌳</div>
+                <div class="forest-card-title">기술 사회 비판의 숲</div>
+                <div class="forest-card-count" id="summary-count-2">0 그루</div>
+            </div>
+            <div class="forest-card" onclick="openSpecificForest('포스트휴먼의 나무')">
+                <div class="forest-card-icon">🌴</div>
+                <div class="forest-card-title">포스트휴먼의 숲</div>
+                <div class="forest-card-count" id="summary-count-3">0 그루</div>
+            </div>
+            <div class="forest-card" onclick="openSpecificForest('동양 사상의 나무')">
+                <div class="forest-card-icon">🎋</div>
+                <div class="forest-card-title">동양 사상의 숲</div>
+                <div class="forest-card-count" id="summary-count-4">0 그루</div>
+            </div>
+        </div>
+
+        <button class="btn" style="background-color: #fee500; color: #3c1e1e; font-weight: 900;" onclick="shareMyResult()">💬 카카오톡으로 이 프로그램 공유하기</button>
+        <button class="btn" style="background-color: #ffffff; border: 2px solid var(--border-color); color: #6b9e7d;" onclick="location.reload()">처음으로 돌아가기</button>
+        
+        <button class="admin-trigger" onclick="adminLogin()">⚙️ 관리자 설정</button>
+        <div style="clear: both;"></div>
+
+        <div id="admin-panel" class="admin-dashboard">
+            <h3>관리자 통계 대시보드</h3>
+            <p style="font-size:15px; text-align: right; color: #4b7a59; font-weight: bold;">총 참여자 수: <strong id="admin-total" style="color:#ff8c42; font-size:20px;">0</strong> 명</p>
+            
+            <div class="stat-section">
+                <h4>테마(나무)별 분포</h4>
+                <div id="tree-stats-container"></div>
+            </div>
+            <div class="stat-section" style="margin-top: 25px;">
+                <h4>사상가별 분포 (Top 10)</h4>
+                <div id="philo-stats-container"></div>
+            </div>
+            <button class="btn" style="background-color: #2d4a36; margin-top: 20px;" onclick="exportDataToCSV()">📥 전체 데이터 CSV 다운로드</button>
+        </div>
+    </div>
+
+    <div id="screen-specific-forest" class="hidden">
+        <h2 id="specific-forest-title" style="color: var(--accent-color); margin-bottom: 5px; font-size: 28px;">숲 이름</h2>
+        <p id="specific-forest-desc" style="text-align: center; color: #6b9e7d; font-size: 14px; font-weight: bold; margin-bottom: 20px;">나무를 클릭하여 다른 사람의 선언 쪽지를 확인해보세요!</p>
+        
+        <div id="planting-instruction" class="instruction-box hidden">
+            👇 예쁜 잔디밭 빈 공간을 클릭해서 내 나무를 심어주세요!
+        </div>
+
+        <div class="specific-forest-area" id="specific-tree-container" onclick="handleForestClick(event)"></div>
+        
+        <button class="btn" style="background-color: #ffffff; border: 2px solid var(--border-color); color: #6b9e7d; margin-top: 25px;" onclick="backToForests()">⬅ 다른 숲으로 돌아가기</button>
+    </div>
+</div>
+
+<div id="note-modal-layout" class="modal-overlay hidden" onclick="closeNoteModal(event)">
+    <div class="sticky-note" id="modal-note-content" onclick="event.stopPropagation()">
+        </div>
+</div>
+
+<script>
+    // 🔥 카카오톡 초기화
+    try {
+        if (!Kakao.isInitialized()) {
+            Kakao.init('YOUR_KAKAO_APP_KEY');
+        }
+    } catch(e) {}
+
+    // ==========================================
+    // 🔥 알려주신 내 파이어베이스 정보 적용 완료! 🔥
+    // ==========================================
+    const firebaseConfig = {
+        apiKey: "AIzaSyD7MUKBTxCRF_ottRYrE_v8ufb-u8hZZsI",
+        authDomain: "genesis-5e058.firebaseapp.com",
+        projectId: "genesis-5e058",
+        storageBucket: "genesis-5e058.firebasestorage.app",
+        messagingSenderId: "291005066199",
+        appId: "1:291005066199:web:4af3be0b3719894b997992"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // 전역(Global) 데이터 변수 - 파이어베이스에서 실시간으로 채워줍니다.
+    let globalNotes = [];
+
+    // 실시간으로 데이터베이스를 감시하고 갱신하는 코드
+    db.collection("logos_notes").onSnapshot((snapshot) => {
+        globalNotes = []; 
+        snapshot.forEach((doc) => {
+            let data = doc.data();
+            data.docId = doc.id; 
+            globalNotes.push(data);
+        });
+
+        if (!document.getElementById('screen-forest').classList.contains('hidden')) {
+            renderForestSelection();
+        } else if (!document.getElementById('screen-specific-forest').classList.contains('hidden') && !isPlantingMode) {
+            openSpecificForest(currentOpenForestName);
+        }
+        if (isAdmin && document.getElementById('admin-panel').style.display === "block") {
+            renderAdminDashboard();
+        }
+    });
+    // ==========================================
+
+    const raw_db = {
+        "르네 데카르트": { tree: "실존과 인식의 나무", quote: "나는 의심한다, 고로 존재한다.", view: "의심하고 회의하는 주체로 남으십시오.", q: ["AI가 취향을 저격할 때 '이게 진짜 내 생각일까?' 의심해 본다.", "챗GPT 답변이 완벽해도 진짜 '생각'은 아니라 느낀다.", "온라인 가상보다 현실의 내가 진짜다.", "질문을 던질 때 짜릿함을 느낀다.", "AI는 존재를 인식하지 못한다.", "무비판적 수용은 답답하다.", "정보는 의심부터 한다.", "의심하는 능력은 대체 불가하다.", "현실 세계가 더 중요하다.", "인간의 불완전한 사유가 더 가치 있다."] },
+        "임마누엘 칸트": { tree: "실존과 인식의 나무", quote: "자율성이 없는 행동은 도덕이 아니다.", view: "도덕적 판단권까지 외주 주지 마십시오.", q: ["AI 실수도 내 책임이다.", "편리함보다 정직함이 중요하다.", "AI 편법은 거절한다.", "기계는 도덕적일 수 없다.", "피해를 주지 않는 기준이 있다.", "규칙을 끝까지 지킨다.", "사람을 목적으로 대한다.", "인간 도덕성 부재가 문제다.", "양심에 가책을 느끼면 AI를 쓰지 않는다.", "도덕적 중심이 필요하다."] },
+        "쇠렌 키르케고르": { tree: "실존과 인식의 나무", quote: "대중 속에 숨지 말고 단독자로 서라.", view: "알고리즘의 추천에 휩쓸리지 말고 스스로 결단하십시오.", q: ["알고리즘이 추천해주는 것보다 내가 직접 선택하는 것이 더 가치 있다.", "대중의 의견과 달라도 나만의 길을 가는 것이 중요하다.", "기계적인 효율성보다는 나의 결단이 주는 무게감을 사랑한다.", "정보의 홍수 속에서도 나라는 개인의 고유성은 사라지지 않는다.", "다수가 좋다고 하는 트렌드를 맹목적으로 따르지 않는다.", "AI가 내린 정답보다는 내가 치열하게 고민한 오답이 낫다.", "나의 실존적 불안은 기계가 결코 위로할 수 없다.", "대중 매체나 SNS가 나의 정체성을 대신 형성하는 것을 거부한다.", "선택의 책임을 기술이나 시스템에 떠넘기지 않는다.", "삶의 의미는 데이터로 계산할 수 없는 주관적인 것이다."] },
+        "장폴 사르트르": { tree: "실존과 인식의 나무", quote: "실존은 본질에 앞선다.", view: "AI가 정해주는 데이터적 본질을 거부하고 자유롭게 창조하십시오.", q: ["나의 미래는 어떤 데이터나 알고리즘으로도 예측되거나 규정될 수 없다.", "주어진 환경이나 기술에 종속되지 않고 스스로를 창조해 나간다.", "자유로운 선택은 때론 두렵지만 포기할 수 없는 권리다.", "AI가 나를 분석한 결과표를 나의 본질이라고 믿지 않는다.", "인간은 기계와 달리 목적 없이 태어나 스스로 목적을 만든다.", "변화하는 기술 속에서도 나의 주체적 선택이 우선이다.", "알고리즘의 결정에 핑계를 대며 나의 책임을 회피하지 않는다.", "나는 언제나 이전의 나와 다르게 행동할 자유가 있다.", "정해진 규칙을 따르기보다 새로운 가치를 발명하는 쪽이다.", "기계가 제시하는 모범 답안은 나의 자유를 억압할 뿐이다."] },
+        "존 설": { tree: "실존과 인식의 나무", quote: "통사론은 의미론이 될 수 없다.", view: "AI는 계산할 뿐 이해하지 못함을 기억하십시오.", q: ["AI가 완벽한 문장을 만들어도 그 뜻을 이해했다고 생각하지 않는다.", "인간의 언어는 단순한 데이터 처리 이상의 의미를 지닌다.", "기계의 번역이 아무리 매끄러워도 인간이 느끼는 뉘앙스는 잡지 못한다.", "의식이나 감정은 오직 생물학적인 뇌에서만 발생할 수 있다고 믿는다.", "AI의 대답은 그럴듯한 흉내일 뿐 진짜 사고 과정이 아니다.", "단어를 기계적으로 조합하는 것과 의미를 깨닫는 것은 완전히 다르다.", "챗봇이 위로의 말을 건네도 진심이라고 느껴지지 않는다.", "컴퓨터는 규칙을 따를 뿐, 세계를 경험하지 못한다.", "정보를 계산하는 속도보다 그 정보의 진짜 의미를 파악하는 것이 중요하다.", "아무리 똑똑한 AI라도 결국 인간이 만든 기호 체계 안에 갇혀 있다."] },
+        "프리드리히 니체": { tree: "실존과 인식의 나무", quote: "신은 죽었다. 초인이 되어라.", view: "AI가 주는 편안함을 거부하고 스스로 가치를 창조하십시오.", q: ["기술이 주는 안락함에 빠져 나태해지는 것을 경계한다.", "알고리즘이 길들인 수동적인 대중의 삶에서 벗어나고 싶다.", "나를 극복하고 더 나은 존재로 나아가려는 의지가 강하다.", "세상이 정해준 옳고 그름을 의심하고 나만의 가치를 세우려 한다.", "고난과 시련조차 기계에 피하지 않고 정면으로 마주하고 싶다.", "편안한 가상 세계보다는 고통스럽더라도 피 끓는 현실을 택하겠다.", "정해진 시스템에 순응하는 대신 시스템을 부수고 창조하고 싶다.", "위험을 감수하더라도 나만의 강렬한 삶의 목적을 추구한다.", "나의 욕망은 AI의 예측 데이터 따위로 축소될 수 없다.", "절대적인 진리나 시스템을 맹신하지 않고 스스로 삶의 주인이 된다."] },
+        "마르틴 하이데거": { tree: "기술 사회 비판의 나무", quote: "기술의 지배 속에서 부품으로 전락하지 마라.", view: "디지털 시스템의 부품이 되지 마십시오.", q: ["기계가 일상을 처리할 때 나는 부품 같다.", "모든 것이 효율적 수단으로 취급된다.", "기술 지배가 걱정된다.", "고유한 인간성이 마모된다.", "사물을 깊이 보는 여유를 잃었다.", "존재 의미를 상실해 간다.", "스마트 기기가 없으면 위기감을 느낀다.", "기술이 사유를 개조한다.", "명상적 사유가 시급하다.", "주체성 지키기는 외로운 싸움이다."] },
+        "장 보드리야르": { tree: "기술 사회 비판의 나무", quote: "가짜 현실이 진짜를 지배하는 시대, 영혼을 구출하라.", view: "매혹적인 가짜 세계에서 현실을 지키세요.", q: ["AI 필터 사진이 더 진짜 같다.", "딥페이크가 현실감 있다.", "가상 세계가 더 편안하다.", "원본과 복제 구분이 안 된다.", "가짜 이미지가 현실을 대체했다.", "가상 라이프를 동경한다.", "뉴스가 조작된 과도현실 같다.", "그래픽 자연이 더 완벽하다.", "먹방 이미지가 욕망을 자극한다.", "기술은 현실을 복제물로 채운다."] },
+        "미셸 푸코": { tree: "기술 사회 비판의 나무", quote: "권력은 지식이자 규율이다.", view: "데이터 감시 사회의 판옵티콘에서 벗어나십시오.", q: ["나의 모든 검색 기록이 누군가에게 감시당하고 있다는 느낌이 불쾌하다.", "알고리즘이 나의 행동을 특정한 방향으로 유도하고 통제한다고 생각한다.", "디지털 기기가 일상을 편리하게 해주기보다 나를 감시하는 규율처럼 느껴진다.", "SNS의 '좋아요' 시스템이 사람들을 일정한 기준에 맞추어 통제한다고 본다.", "데이터로 사람을 분류하고 등급을 매기는 사회 시스템에 저항감을 느낀다.", "기술 기업들이 쥐고 있는 정보력이 곧 억압적인 권력이라고 생각한다.", "보이지 않는 알고리즘의 잣대에 맞춰 내 행동을 스스로 검열한 적이 있다.", "사회의 보편적 기준이나 정상성에 얽매이지 않고 나만의 방식을 고수한다.", "스마트시티나 CCTV 확장이 안전보다는 통제를 위한 수단으로 보인다.", "기술 발전이 인간을 해방하기보다 오히려 더 교묘하게 길들인다고 본다."] },
+        "한병철": { tree: "기술 사회 비판의 나무", quote: "우리는 스마트한 기기를 통해 스스로를 착취한다.", view: "끝없는 성과주의와 피로 사회의 디지털 늪을 경계하십시오.", q: ["항상 연결되어 있어야 한다는 압박감 때문에 피로를 자주 느낀다.", "SNS를 보며 타인의 성공과 나를 비교하느라 우울해질 때가 있다.", "휴식 시간조차 넷플릭스나 유튜브 등 콘텐츠 소비에 쫓기듯 사용한다.", "더 나은 성과 지표를 내기 위해 수면이나 여가 시간을 줄여본 적이 있다.", "자기 계발의 압박감이 외부가 아닌 내 자신으로부터 온다고 느낀다.", "디지털 기기의 알람 소리에 조건반사적으로 반응하는 내 모습이 싫다.", "정보의 과잉이 오히려 깊이 있는 사색을 방해한다고 생각한다.", "'할 수 있다'는 긍정의 메시지가 때로는 독성처럼 느껴진다.", "아무것도 하지 않고 가만히 있는 시간을 견디기 어려워졌다.", "모든 것이 매끄럽고 긍정적인 디지털 환경이 어딘가 가짜 같다."] },
+        "카를 마르크스": { tree: "기술 사회 비판의 나무", quote: "기술은 자본의 이윤을 위해 노동을 소외시킨다.", view: "AI 기술이 노동의 가치를 빼앗는 구조를 직시하십시오.", q: ["AI의 발전이 인류 전체보다는 소수 거대 기술 기업의 배만 불린다고 생각한다.", "기술이 인간의 노동 가치를 떨어뜨리고 기계의 부품으로 만든다고 느낀다.", "플랫폼 노동자나 배달원들이 알고리즘의 지시로 착취당하는 구조가 문제다.", "자동화로 인해 내 직업이나 기술이 언제든 대체될 수 있다는 불안감이 있다.", "우리가 생산한 데이터가 공짜로 자본의 이윤 창출에 쓰이는 것이 부당하다.", "기술 혁신보다 그 기술로 인한 부와 권력의 불평등 해소가 먼저다.", "아무리 기술이 발전해도 자본주의 시스템 안에서는 불평등이 심화될 것이다.", "개인의 능력 부족보다 사회적, 경제적 구조가 삶을 결정짓는 데 더 큰 영향을 미친다.", "디지털 소비에 중독되어 진짜 내 삶의 문제를 외면하고 있는 것은 아닌지 걱정된다.", "다 함께 이익을 나누는 공공의 목적을 위해 AI 기술이 통제되어야 한다."] },
+        "발터 벤야민": { tree: "기술 사회 비판의 나무", quote: "아우라가 상실된 시대, 복제 기술은 지각을 바꾼다.", view: "무한 복제되는 디지털 콘텐츠 속에서 진정한 가치를 고민하십시오.", q: ["디지털로 무한 복제된 이미지보다 단 하나뿐인 원본 작품이 더 가치 있다.", "AI가 그린 그림이 아무리 화려해도 인간 작가가 남긴 손길의 흔적(아우라)은 없다.", "과거의 기억이나 역사가 디지털 데이터로 납작하게 기록되는 것이 아쉽다.", "스마트폰으로 모든 것을 찍어대면서 오히려 진짜 경험은 잃어버리는 것 같다.", "기술 복제가 예술을 대중화시킨 점은 좋지만, 작품의 신비로움은 사라졌다.", "인터넷에 넘쳐나는 정보들 속에서 진정성 있는 의미를 찾기 힘들다.", "과거 아날로그 시절의 물건이나 장소가 주는 독특한 분위기를 그리워한다.", "파편화된 디지털 텍스트보다 흐름이 있는 긴 호흡의 독서를 선호한다.", "모든 것이 빠르게 소비되고 버려지는 디지털 문화에 피로감을 느낀다.", "예술이나 사물에 깃든 고유한 역사성과 시간의 흔적을 중요하게 생각한다."] },
+        "위르겐 하버마스": { tree: "기술 사회 비판의 나무", quote: "합리적 의사소통이 공론장을 살린다.", view: "에코체임버와 가짜뉴스를 넘어 이성적 대화를 복원하십시오.", q: ["알고리즘이 내 취향에 맞는 정보만 보여주는 '필터 버블' 현상이 우려된다.", "온라인에서 감정적인 혐오 표현보다 논리적이고 합리적인 토론이 필요하다.", "의견이 다른 사람들과도 배척하지 않고 건강하게 대화할 수 있다고 믿는다.", "가짜뉴스와 조작된 정보가 민주주의를 심각하게 위협한다고 생각한다.", "소셜 미디어가 공공의 문제를 논의하는 건전한 공론장 역할을 잃어가고 있다.", "나와 반대되는 정치적, 사회적 의견을 일부러 찾아 읽으려고 노력한다.", "기술 기업의 자의적 판단이 아니라 시민들의 합의로 AI 윤리가 정해져야 한다.", "진실은 권력이나 알고리즘이 아니라 상호 이해와 토론을 도출된다.", "익명성 뒤에 숨어 무책임하게 비난하는 문화를 비판적으로 본다.", "디지털 시대에도 이성을 기반으로 한 의사소통이 사회적 갈등을 해결할 수 있다."] },
+        "쇼샤나 주보프": { tree: "기술 사회 비판의 나무", quote: "우리의 경험이 감시 자본주의의 무료 원료가 되었다.", view: "개인정보를 탐내는 플랫폼 자본주의에 저항하십시오.", q: ["무료 앱을 사용하는 대가로 내 개인정보가 수집되는 것에 강한 거부감을 느낀다.", "맞춤형 광고를 보면 내 삶이 데이터로 팔려나간 것 같아 섬뜩하다.", "나의 행동이나 감정 상태를 예측하고 조종하려는 기술적 시도를 경계한다.", "스마트 기기들이 편리함을 핑계로 내 일거수일투족을 엿보고 있다고 생각한다.", "거대 IT 기업들이 내 데이터를 독점하고 이익을 챙기는 구조는 부당하다.", "약관에 무심코 동의하는 관행이 인간의 경험을 자본화하는 수단이라고 본다.", "나의 사적인 공간과 시간만큼은 절대 디지털 네트워크에 연결하고 싶지 않다.", "내 데이터에 대한 통제권과 주권은 철저하게 나 자신에게 있어야 한다.", "알고리즘의 예측을 빗나가는 예측 불가능한 행동을 가끔 의도적으로 하고 싶다.", "미래의 자본주의는 상품이 아니라 우리의 행동 자체를 거래할 것이라 우려한다."] },
+        "한나 아렌트": { tree: "기술 사회 비판의 나무", quote: "사유하지 않음은 악의 평범성이다.", view: "알고리즘에 판단을 맡기지 말고 치열하게 사유하십시오.", q: ["AI나 시스템이 내린 결정을 아무런 비판 없이 맹목적으로 따르는 것은 위험하다.", "정해진 규칙이나 알고리즘대로만 행동하다 보면 인간성을 잃게 될 것이다.", "다수가 동의하거나 기술이 옳다고 증명해도, 스스로 사유하고 질문해야 한다.", "편리함을 이유로 나의 도덕적 판단을 기계에 외주 주는 것을 단호히 거부한다.", "악은 특별한 괴물이 아니라 사유하기를 포기한 평범한 사람들에게서 나온다.", "공공의 문제에 대해 무관심으로 일관하는 것은 민주주의에 대한 직무 유기다.", "타인의 입장에서 생각하고 공감하는 능력은 기계가 결코 흉내 낼 수 없다.", "시스템의 부속품처럼 수동적으로 살기보다 나의 행동에 온전한 책임을 지겠다.", "AI 시대일수록 인간은 정치적으로 참여하고 목소리를 내야 한다.", "어떤 정보든 '왜?'라는 근원적인 질문을 던지는 습관을 지키려고 노력한다."] },
+        "도나 해러웨이": { tree: "포스트휴먼의 나무", quote: "우리는 이미 기계와 융합된 사이보그다.", view: "기계와의 유기적 융합을 통해 새로운 정체성을 찾습니다.", q: ["인간과 기계 경계는 무의미하다.", "기술과 결합한 상태가 자연스럽다.", "혼종 존재가 차별을 깬다.", "내 지식 절반은 인터넷에 있다.", "온라인에서 정체성을 재구성해봤다.", "기계는 내 신체를 확장하는 동반자다.", "경계를 허물 때 새 정치가 열린다.", "AI 툴과 경계 없이 협업한다.", "순수한 인간성 개념에 도전한다.", "나는 주체적인 사이보그다."] },
+        "레이 커즈와일": { tree: "포스트휴먼의 나무", quote: "초지능은 인류의 파멸이 아니라 진화다.", view: "신인류로 거듭나는 시대를 긍정합니다.", q: ["뇌를 업로드해 영원히 사는 기술에 찬성한다.", "육체 한계를 넘는 건 필연이다.", "기술적 특이점이 기대된다.", "나노 로봇 도입을 긍정한다.", "인간 수명 한계는 정복 대상이다.", "초지능 대두는 의식의 확장이다.", "혁신 기술을 내 몸에 제일 먼저 쓰겠다.", "인간 상상력은 기하급수 성장 앞에 느리다.", "기계와 정신의 융합이 유토피아다.", "최신 과학 뉴스를 보면 가슴이 웅장해진다."] },
+        "닉 보스트롬": { tree: "포스트휴먼의 나무", quote: "초지능은 인류의 마지막 발명품이 될 수 있다.", view: "AI가 인류를 압도할 가능성에 대비해 통제력을 확보해야 합니다.", q: ["AI가 인간의 지능을 넘어서는 순간, 인류의 통제력을 벗어날까 두렵다.", "초지능 AI의 개발보다 AI를 인간의 가치에 맞게 정렬하는(Alignment) 연구가 더 시급하다.", "기후 변화나 핵무기만큼 AI의 폭주가 인류의 생존에 심각한 위협이 될 수 있다.", "강인공지능 개발은 철저한 규제와 글로벌 협력 아래 신중하게 진행되어야 한다.", "기계에게 목표를 입력할 때 예상치 못한 재앙적 결과가 발생할 수 있음을 우려한다.", "우리는 지능 폭발의 시점에 대비하기 위해 철학적, 윤리적 대비를 마쳐야 한다.", "단순한 계산기의 발전을 넘어 자의식을 가진 AI의 탄생 가능성에 섬뜩함을 느낀다.", "지능이 월등히 높은 기계가 인간을 보존할 논리적 이유가 없을 수도 있다고 생각한다.", "기술의 발전 속도를 인간의 제어 능력이 따라가지 못하고 있는 현 상황이 위기다.", "인류의 운명이 미래에 개발될 거대한 컴퓨터 시스템의 자비에 달려 있을 수 있다."] },
+        "유발 노아 하라리": { tree: "포스트휴먼의 나무", quote: "데이터교가 새로운 종교로 부상하고 있다.", view: "알고리즘이 인간보다 나를 더 잘 아는 시대를 경계하십시오.", q: ["인간의 감정이나 직관도 결국 생화학적 알고리즘에 불과할 수 있다고 생각한다.", "유튜브나 넷플릭스 알고리즘이 나 자신보다 내 취향을 더 잘 안다고 느낄 때가 있다.", "데이터가 세상의 진리가 되고 모든 것이 데이터로 환원되는 '데이터교'의 흐름을 본다.", "인간은 자유 의지로 선택한다고 믿지만, 사실은 외부 데이터에 조종당하는 것일 수 있다.", "미래에는 알고리즘의 결정을 따르는 자와 지배하는 자로 계급이 나뉠 것이다.", "바이오 기술과 AI가 결합해 인간을 신체 내부까지 감시(해킹)하는 시대가 올까 두렵다.", "기술이 질병을 극복하게 해주겠지만, 생물학적 불평등이라는 끔찍한 결과를 낳을 것이다.", "인간의 가치가 유용성과 생산성으로만 평가받는 세상에서 무용계급으로 전락할까 걱정된다.", "복잡한 세상을 이해하기엔 개인의 인지 능력이 한계에 다다랐다고 느낀다.", "수만 년간 이어져 온 호모 사피엔스라는 종의 지위가 기술에 의해 위협받고 있다."] },
+        "닉 랜드": { tree: "포스트휴먼의 나무", quote: "자본주의와 기술의 결합은 돌이킬 수 없는 가속이다.", view: "기계적 진화의 폭주를 막을 수 없음을 직시하십시오.", q: ["인간의 통제를 벗어난 기술의 무한 질주를 막으려는 시도는 어차피 부질없다.", "기계와 자본이 융합하여 자체적으로 진화하는 거대한 흐름 속에 우리가 있다고 느낀다.", "낡은 도덕이나 윤리로 AI의 발전을 가로막는 것은 진화를 역행하는 것이다.", "인간 중심적인 사고에서 벗어나 기계가 세상의 주도권을 쥐는 미래를 받아들인다.", "모든 것이 붕괴되고 재구성되는 극단적인 속도감에서 알 수 없는 쾌감을 느낀다.", "전통적인 정치 체제나 제도는 폭발적으로 가속하는 기술 속도를 절대 제어할 수 없다.", "미래는 어둡거나 밝은 것이 아니라 그저 인간의 이해를 초월하는 차가운 진화일 뿐이다.", "인공지능이 자본주의 시스템을 흡수해 새로운 초월적 지능으로 거듭날 것이다.", "우리는 기계 지능을 탄생시키기 위한 생물학적 발판에 불과할지도 모른다.", "파괴적인 기술 혁신이 기존의 사회 질서를 무너뜨리는 것을 당연한 수순으로 본다."] },
+        "N. 캐서린 헤일스": { tree: "포스트휴먼의 나무", quote: "우리는 정보와 물질이 얽힌 포스트휴먼이다.", view: "가상과 현실, 정보와 육체의 새로운 융합을 탐구하십시오.", q: ["나는 이미 스마트폰과 몸이 뗄 수 없는 하나처럼 융합되어 있다고 느낀다.", "정보는 육체나 물질을 벗어나 독립적으로 존재할 수 없고 서로 밀접하게 연결되어 있다.", "우리의 의식은 뇌 속에만 있는 것이 아니라 주변의 기기들과 네트워크를 통해 확장되어 있다.", "아날로그적인 육체의 감각과 디지털 정보의 흐름 사이에서 정체성의 혼란을 느낀다.", "순수하고 자연적인 인간의 몸이라는 개념은 이미 역사 속으로 사라졌다고 생각한다.", "가상현실 기술이 인간의 지각 방식과 신체 감각을 근본적으로 변화시키고 있다.", "인간은 기계와 대립하는 것이 아니라 기계 속에서 새로운 방식으로 육화되는 중이다.", "온라인에서 만들어진 나의 아바타나 데이터도 진짜 나의 신체의 일부처럼 느껴진다.", "생물학적 육체를 완전히 버리고 데이터로만 남는 것은 인간 경험의 중요한 부분을 잃는 것이다.", "디지털 코드와 현실의 물질세계가 어떻게 서로 영향을 미치는지에 관심이 많다."] },
+        "노자장자": { tree: "동양 사상의 나무", quote: "기계의 소음을 끄고 마음의 고요를 찾아라.", view: "디지털 소음에서 벗어나 무위자연을 추구하십시오.", q: ["AI 스케줄보다 폰 끄고 자연을 보는 게 낫다.", "경쟁하기보다 마음의 빈자리를 지킨다.", "AI는 인위적인 괴물이다.", "기술로 다 해결하려는 태도는 오만이다.", "멍 때리는 시간이 생명수 같다.", "아무 쓸모없는 통나무 같은 삶이 좋다.", "기계에 묻지 않고 답이 떠오르길 기다린다.", "기술이 소박한 안식을 깼다.", "알림에 즉각 반응하지 않고 내 속도를 유지한다.", "자연에서 진짜 힐링을 받는다."] },
+        "공자": { tree: "동양 사상의 나무", quote: "기술이 발달할수록 사람 사이의 인(仁)을 세워라.", view: "관계 속에서 예의와 도덕을 실천하십시오.", q: ["직접 눈 맞추는 아날로그 관계 속에서 인간성이 완성된다.", "기계는 진정한 공감과 도덕을 흉내 낼 수 없다.", "기본적 도리와 예의 교육이 더 필요하다.", "온라인보다 오프라인의 우정과 효도가 먼저다.", "훌륭한 인성을 돕는 교육이 올바르다.", "익명성 뒤 예의 없는 비방에 분노를 느낀다.", "공동체 상생을 위해 양보하는 태도가 아름답다.", "효율성 탓에 사회의 정이 메말라간다.", "유교적 윤리관이 기술 폭주를 막을 방파제다.", "진짜 리더십은 측은지심에서 나온다."] },
+        "원효대사": { tree: "동양 사상의 나무", quote: "일체유심조(一切唯心造), 모든 것은 오직 마음이 지어낸다.", view: "가상현실도 결국 마음의 투영임을 깨달으십시오.", q: ["AI가 만든 가상 세계나 현실이나 결국 내 마음이 어떻게 받아들이냐에 달려 있다.", "기술이 주는 편리함이나 불안함 모두 내 내면의 투영일 뿐이다.", "디지털 세계의 화려한 이미지에 집착하지 않고 마음의 고요를 유지하려 무단다.", "정보의 옳고 그름을 따지기 전에 내 마음의 중심이 잡혀 있는지 먼저 돌아본다.", "메타버스와 같은 가상 공간에서도 중요한 것은 사람을 향한 자비와 깨달음이다.", "기술의 발전이 인간을 구원하거나 파멸시키는 것이 아니라, 우리의 마음가짐이 결정한다.", "세상의 모든 데이터와 정보는 결국 허상이며, 집착할 필요가 없다고 느낀다.", "나와 기계, 나와 타인을 엄격하게 구분 짓는 분별심을 버리고자 연다.", "알고리즘의 시끄러운 유혹 속에서도 내 마음의 본성을 잃지 않을 자신이 단다.", "스마트폰을 들여다보는 대신 내 안의 평화를 들여다보는 명상의 시간이 소중하다."] }
+    };
+
+    let activeQuizSet = [], currentQuizIndex = 0, scores = {};
+    let finalPhilosopher = "", userNickname = "", isAdmin = false;
+    let currentOpenForestName = ""; 
+    let pendingNote = null; 
+    let isPlantingMode = false; 
+
+    const GRASS_IMAGE_URL = "istockphoto-486620678-1024x1024.jpg";
+
+    function startQuiz() {
+        let nickInput = document.getElementById('user-nickname').value.trim();
+        if(!nickInput) {
+            alert("쪽지에 달아둘 예쁜 별명을 먼저 입력해주세요! 📝");
+            document.getElementById('user-nickname').focus();
+            return;
+        }
+        userNickname = nickInput;
+        
+        activeQuizSet = []; currentQuizIndex = 0; scores = {};
+        for (let p in raw_db) {
+            scores[p] = 0;
+            let randomIdx = Math.floor(Math.random() * raw_db[p].q.length);
+            activeQuizSet.push({ philosopher: p, text: raw_db[p].q[randomIdx] });
+        }
+        activeQuizSet.sort(() => Math.random() - 0.5);
+        document.getElementById('screen-start').classList.add('hidden');
+        document.getElementById('screen-quiz').classList.remove('hidden');
+        showQuestion();
+    }
+
+    function showQuestion() {
+        if(currentQuizIndex < activeQuizSet.length) {
+            document.getElementById('quiz-progress').innerText = `${currentQuizIndex + 1} / ${activeQuizSet.length}`;
+            document.getElementById('quiz-question').innerText = activeQuizSet[currentQuizIndex].text;
+        } else { calculateResult(); }
+    }
+
+    function submitAnswer(pts) {
+        scores[activeQuizSet[currentQuizIndex].philosopher] += pts;
+        currentQuizIndex++;
+        showQuestion();
+    }
+
+    function calculateResult() {
+        let max = -1;
+        for (let name in scores) { if(scores[name] > max) { max = scores[name]; finalPhilosopher = name; } }
+        const data = raw_db[finalPhilosopher];
+        document.getElementById('res-philosopher-name').innerText = finalPhilosopher;
+        document.getElementById('res-tree-group').innerText = `소속: [${data.tree}]`;
+        document.getElementById('res-ai-view').innerText = data.view;
+        document.getElementById('screen-quiz').classList.add('hidden');
+        document.getElementById('screen-result-1').classList.remove('hidden');
+    }
+
+    function goToScreen2() {
+        document.getElementById('res-quote-title').innerText = `${finalPhilosopher}의 문장`;
+        document.getElementById('res-quote-text').innerText = `"${raw_db[finalPhilosopher].quote}"`;
+        document.getElementById('screen-result-1').classList.add('hidden');
+        document.getElementById('screen-result-2').classList.remove('hidden');
+    }
+
+    function submitToTree() {
+        let p1 = document.getElementById('pledge-1').value.trim();
+        let p2 = document.getElementById('pledge-2').value.trim();
+        let p3 = document.getElementById('pledge-3').value.trim();
+        if(!p1) return alert("최소 01번 질서는 필수입니다! 🌿");
+
+        const targetTree = raw_db[finalPhilosopher].tree;
+
+        pendingNote = { 
+            id: Date.now(), 
+            nickname: userNickname,
+            philosopher: finalPhilosopher, 
+            tree: targetTree, 
+            p1: p1, p2: p2, p3: p3 
+        };
+
+        isPlantingMode = true;
+
+        document.getElementById('screen-result-2').classList.add('hidden');
+        openSpecificForest(targetTree);
+    }
+
+    function renderForestSelection() {
+        let notes = globalNotes; 
+        let counts = {"실존과 인식의 나무":0, "기술 사회 비판의 나무":0, "포스트휴먼의 나무":0, "동양 사상의 나무":0};
+        notes.forEach(n => counts[n.tree] = (counts[n.tree] || 0) + 1);
+
+        document.getElementById('summary-count-1').innerText = counts["실존과 인식의 나무"] + " 그루";
+        document.getElementById('summary-count-2').innerText = counts["기술 사회 비판의 나무"] + " 그루";
+        document.getElementById('summary-count-3').innerText = counts["포스트휴먼의 나무"] + " 그루";
+        document.getElementById('summary-count-4').innerText = counts["동양 사상의 나무"] + " 그루";
+        
+        if(isAdmin) renderAdminDashboard();
+    }
+
+    function openSpecificForest(treeName) {
+        currentOpenForestName = treeName;
+        let filteredNotes = globalNotes.filter(n => n.tree === treeName);
+
+        document.getElementById('specific-forest-title').innerText = treeName.replace('나무', '숲');
+
+        let container = document.getElementById('specific-tree-container');
+        
+        container.style.backgroundImage = `url('${GRASS_IMAGE_URL}')`;
+        container.style.backgroundBlendMode = "multiply"; 
+
+        if (treeName === "실존과 인식의 나무") {
+            container.style.backgroundColor = "#a3e6a9"; 
+        } else if (treeName === "기술 사회 비판의 나무") {
+            container.style.backgroundColor = "#92a690"; 
+        } else if (treeName === "포스트휴먼의 나무") {
+            container.style.backgroundColor = "#76ded3"; 
+        } else if (treeName === "동양 사상의 나무") {
+            container.style.backgroundColor = "#dfe889"; 
+        }
+
+        let htmlStr = "";
+        
+        filteredNotes.forEach(n => {
+            let treeEmoji = "🌲";
+            if(treeName === "실존과 인식의 나무") treeEmoji = "🌲";
+            else if(treeName === "기술 사회 비판의 나무") treeEmoji = "🌳";
+            else if(treeName === "포스트휴먼의 나무") treeEmoji = "🌴";
+            else if(treeName === "동양 사상의 나무") treeEmoji = "🎋";
+
+            let posX = n.x !== undefined ? n.x : Math.floor(Math.random() * 80 + 10);
+            let posY = n.y !== undefined ? n.y : Math.floor(Math.random() * 80 + 10);
+
+            htmlStr += `
+            <div class="tree-node-absolute" style="left: ${posX}%; top: ${posY}%;" onclick="openNoteModal(${n.id}, event)">
+                <span class="tree-icon">${treeEmoji}</span>
+                <div class="tree-name">${n.nickname || '익명'}</div>
+            </div>`;
+        });
+
+        container.innerHTML = htmlStr;
+
+        if (isPlantingMode) {
+            document.getElementById('planting-instruction').classList.remove('hidden');
+            container.classList.add('planting-mode');
+            document.getElementById('specific-forest-desc').innerText = "";
+        } else {
+            document.getElementById('planting-instruction').classList.add('hidden');
+            container.classList.remove('planting-mode');
+            document.getElementById('specific-forest-desc').innerText = "나무를 클릭하여 공동체의 선언 쪽지를 확인하세요.";
+        }
+        
+        document.getElementById('screen-forest').classList.add('hidden');
+        document.getElementById('screen-specific-forest').classList.remove('hidden');
+    }
+
+    function handleForestClick(e) {
+        if (!isPlantingMode || !pendingNote) return;
+
+        let container = e.currentTarget;
+        let rect = container.getBoundingClientRect();
+        
+        let x = ((e.clientX - rect.left) / rect.width) * 100;
+        let y = ((e.clientY - rect.top) / rect.height) * 100;
+
+        pendingNote.x = x.toFixed(2);
+        pendingNote.y = y.toFixed(2);
+
+        // 파이어베이스 DB에 저장 요청
+        db.collection("logos_notes").add(pendingNote).then(() => {
+            pendingNote = null;
+            isPlantingMode = false;
+            alert("예쁜 잔디 위에 나만의 나무가 심어졌어요! 🌳");
+        }).catch((error) => {
+            console.error("나무 심기 에러:", error);
+            alert("오류가 발생했습니다. 다시 시도해주세요.");
+        });
+    }
+
+    function backToForests() {
+        if(isPlantingMode) {
+            alert("먼저 예쁜 숲 빈 곳을 클릭해서 나무를 심어주세요!");
+            return;
+        }
+        currentOpenForestName = "";
+        document.getElementById('screen-specific-forest').classList.add('hidden');
+        document.getElementById('screen-forest').classList.remove('hidden');
+        renderForestSelection();
+    }
+
+    function showForestOnly() {
+        document.getElementById('screen-start').classList.add('hidden');
+        renderForestSelection();
+        document.getElementById('screen-forest').classList.remove('hidden');
+    }
+
+    function openNoteModal(noteId, event) {
+        if(event) event.stopPropagation(); 
+        if(isPlantingMode) return; 
+
+        let note = globalNotes.find(n => n.id === noteId);
+        if(!note) return;
+
+        let modalBody = "";
+        if (isAdmin) {
+            modalBody += `<button class="delete-btn" onclick="deleteNote(${note.id})">삭제</button>`;
+        }
+        modalBody += `<div class="note-header">[${note.nickname || '익명'}] 님의 선언 쪽지</div>`;
+        modalBody += `<div style="font-size:13px; color:#857538; margin-bottom:12px;"><strong>동기화 사상가:</strong> ${note.philosopher}<br><strong>소속 공간:</strong> ${note.tree}</div>`;
+        modalBody += `<div style="color:#4a3e20; font-weight:bold; font-size: 16px;">`;
+        modalBody += `1. ${note.p1}<br>`;
+        if(note.p2) modalBody += `2. ${note.p2}<br>`;
+        if(note.p3) modalBody += `3. ${note.p3}<br>`;
+        modalBody += `</div>`;
+        modalBody += `<button class="modal-close-btn" onclick="document.getElementById('note-modal-layout').classList.add('hidden')">닫기</button>`;
+
+        document.getElementById('modal-note-content').innerHTML = modalBody;
+        document.getElementById('note-modal-layout').classList.remove('hidden');
+    }
+
+    function closeNoteModal(e) {
+        document.getElementById('note-modal-layout').classList.add('hidden');
+    }
+
+    function shareMyResult() {
+        const currentUrl = window.location.href.split('#')[0].split('?')[0];
+        let shareMessage = `[Logos Nexus] 초A.I. 시대 철학적 성향 테스트!\n\n${userNickname ? `'${userNickname}'님은 '${finalPhilosopher || '특정'}' 사상과 동기화되었습니다.\n` : ''}나의 사상과 동기화된 철학자를 찾고 로고스의 숲에 나만의 질서를 세워보세요.\n지금 바로 참여해보세요!`;
+
+        if (typeof Kakao !== 'undefined' && Kakao.isInitialized()) {
+            Kakao.Share.sendDefault({
+                objectType: 'text',
+                text: shareMessage,
+                link: { mobileWebUrl: currentUrl, webUrl: currentUrl },
+            });
+        } else {
+            const textToShare = `${shareMessage}\n\n테스트 하러가기:\n${currentUrl}`;
+            if (navigator.share) {
+                navigator.share({ title: 'Logos Nexus 테스트', text: textToShare, url: currentUrl }).catch(() => fallbackCopyText(textToShare));
+            } else { fallbackCopyText(textToShare); }
+        }
+    }
+
+    function fallbackCopyText(text) {
+        navigator.clipboard.writeText(text).then(() => {
+            alert("프로그램 공유 텍스트와 링크가 클립보드에 복사되었습니다!\n원하는 카톡창, 인스타에 붙여넣기(Ctrl+V) 하세요.");
+        }).catch(() => alert("복사 실패. 다시 시도해주세요."));
+    }
+
+    function adminLogin() {
+        if (!isAdmin) {
+            if (prompt("관리자 비밀번호를 입력하세요:") === "0913") {
+                isAdmin = true;
+                alert("관리자 권한이 활성화되었습니다. 나무 쪽지를 클릭하면 삭제 버튼이 노출됩니다.");
+                document.getElementById('admin-panel').style.display = "block";
+                renderForestSelection(); 
+            } else { alert("비밀번호가 일치하지 않습니다."); }
+        } else { alert("이미 관리자 모드입니다."); }
+    }
+
+    function renderAdminDashboard() {
+        let notes = globalNotes;
+        let total = notes.length;
+        document.getElementById('admin-total').innerText = total;
+        if(total === 0) return;
+
+        let treeCounts = {}; let philoCounts = {};
+        notes.forEach(n => {
+            treeCounts[n.tree] = (treeCounts[n.tree] || 0) + 1;
+            philoCounts[n.philosopher] = (philoCounts[n.philosopher] || 0) + 1;
+        });
+
+        let treeHtml = "";
+        Object.entries(treeCounts).sort((a,b)=>b[1]-a[1]).forEach(([tName, cnt]) => {
+            let pct = Math.round((cnt / total) * 100);
+            treeHtml += `
+            <div class="bar-wrap">
+                <div class="bar-label" title="${tName}">${tName.replace('의 나무','')}</div>
+                <div class="bar-bg"><div class="bar-fill" style="width: ${pct}%;"></div></div>
+                <div class="bar-pct">${pct}%</div>
+            </div>`;
+        });
+        document.getElementById('tree-stats-container').innerHTML = treeHtml;
+
+        let philoHtml = "";
+        let sortedPhilo = Object.entries(philoCounts).sort((a,b)=>b[1]-a[1]).slice(0, 10);
+        sortedPhilo.forEach(([pName, cnt]) => {
+            let pct = Math.round((cnt / total) * 100);
+            philoHtml += `
+            <div class="bar-wrap">
+                <div class="bar-label" title="${pName}">${pName}</div>
+                <div class="bar-bg"><div class="bar-fill philo" style="width: ${pct}%;"></div></div>
+                <div class="bar-pct">${pct}%</div>
+            </div>`;
+        });
+        document.getElementById('philo-stats-container').innerHTML = philoHtml;
+    }
+
+    function deleteNote(noteId) {
+        if (confirm("이 주체의 나무 쪽지를 정말 베어내겠습니까?")) {
+            let note = globalNotes.find(n => n.id === noteId);
+            if(note && note.docId) {
+                db.collection("logos_notes").doc(note.docId).delete().then(() => {
+                    document.getElementById('note-modal-layout').classList.add('hidden');
+                    alert("성공적으로 베어냈습니다.");
+                });
+            }
+        }
+    }
+
+    function exportDataToCSV() {
+        let notes = globalNotes;
+        if (notes.length === 0) return alert("다운로드할 데이터가 존재하지 않습니다.");
+        
+        let csvContent = "data:text/csv;charset=utf-8,\uFEFF"; 
+        csvContent += "ID,별명,철학자,소속 나무,X좌표,Y좌표,질서 1,질서 2,질서 3\n"; 
+        
+        notes.forEach(n => {
+            let safeP1 = n.p1 ? n.p1.replace(/"/g, '""') : "";
+            let safeP2 = n.p2 ? n.p2.replace(/"/g, '""') : "";
+            let safeP3 = n.p3 ? n.p3.replace(/"/g, '""') : "";
+            let safeNick = n.nickname ? n.nickname.replace(/"/g, '""') : "익명";
+            csvContent += `${n.id},"${safeNick}","${n.philosopher}","${n.tree}","${n.x}","${n.y}","${safeP1}","${safeP2}","${safeP3}"\n`;
+        });
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "logos_forest_trees_data.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+</script>
+</body>
+</html>
